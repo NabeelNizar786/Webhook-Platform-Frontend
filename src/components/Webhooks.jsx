@@ -40,6 +40,7 @@ const Webhooks = () => {
             <table className="webhook-table">
               <thead>
                 <tr>
+                  <th>Source</th>
                   <th>Source URL</th>
                   <th>Callback URL</th>
                   <th>Status</th>
@@ -49,10 +50,11 @@ const Webhooks = () => {
               <tbody>
                 {webhooks.map((wh) => (
                   <tr
-                    key={wh.id}
+                    key={wh._id}
                     onClick={() => navigate(`/webhooks/${wh._id}/events`)}
                     className="clickable"
                   >
+                    <td className="mono">{wh.source}</td>
                     <td className="mono">{wh.sourceUrl}</td>
                     <td className="mono">{wh.callbackUrl}</td>
                     <td>
