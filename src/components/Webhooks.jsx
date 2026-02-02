@@ -2,21 +2,39 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import CreateWebhookForm from "../components/CreateWebhookForm";
 import { useNavigate } from "react-router-dom";
+// Optional: npm install lucide-react
+import { Copy, Check, Pencil } from "lucide-react";
 
 const Webhooks = () => {
   const [webhooks, setWebhooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState(null); // To show "Success" state
   const navigate = useNavigate();
 
   const fetchWebhooks = async () => {
     try {
       const res = await api.get("/webhooks");
-      console.log(res.data);
       setWebhooks(res.data);
     } catch (err) {
       alert("Failed to fetch webhooks");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopy = (e, id) => {
+    e.stopPropagation(); // Prevents the row's navigate() from firing
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000); // Reset icon after 2s
+  };
+
+  const handleEdit = async (webhook) => {
+    try {
+      await api.delete(`/webhooks/${webhook._id}`);
+      fetchWebhooks()
+    } catch (error) {
+      alert("Failed to deactivate webhooks");
     }
   };
 
@@ -40,10 +58,11 @@ const Webhooks = () => {
             <table className="webhook-table">
               <thead>
                 <tr>
-                  <th>Source</th>
+                  <th>Webhook ID</th>
                   <th>Source URL</th>
                   <th>Callback URL</th>
                   <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
 
@@ -54,13 +73,40 @@ const Webhooks = () => {
                     onClick={() => navigate(`/webhooks/${wh._id}/events`)}
                     className="clickable"
                   >
-                    <td className="mono">{wh.source}</td>
+                    <td className="mono id-cell">
+                      <span>{wh._id}</span>
+                      <button
+                        className="copy-inline-btn"
+                        onClick={(e) => handleCopy(e, wh._id)}
+                        title="Copy ID"
+                      >
+                        {copiedId === wh._id ? (
+                          <Check size={14} color="#4caf50" />
+                        ) : (
+                          <Copy size={14} />
+                        )}
+                      </button>
+                    </td>
                     <td className="mono">{wh.sourceUrl}</td>
                     <td className="mono">{wh.callbackUrl}</td>
                     <td>
                       <span className={`status ${wh.status.toLowerCase()}`}>
                         {wh.status}
                       </span>
+                    </td>
+                    <td>
+                      <div className="status-cell">
+                        <button
+                          className="edit-btn"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Stop row click
+                            handleEdit(wh); // Call your edit logic
+                          }}
+                          title="Edit Status"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
