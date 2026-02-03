@@ -22,17 +22,46 @@ const Webhooks = () => {
     }
   };
 
-  const handleCopy = (e, id) => {
-    e.stopPropagation(); // Prevents the row's navigate() from firing
-    navigator.clipboard.writeText(id);
+  const copyTextToClipboard = async (text) => {
+    // Try the modern API first
+    if (navigator.clipboard && window.isSecureContext) {
+      return await navigator.clipboard.writeText(text);
+    } else {
+      // Fallback: Create a temporary textarea element
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+
+      // Ensure the textarea is off-screen
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "0";
+      document.body.appendChild(textArea);
+
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        console.error("Fallback copy failed", err);
+      }
+
+      document.body.removeChild(textArea);
+    }
+  };
+
+  // --- Updated handleCopy ---
+  const handleCopy = async (e, id) => {
+    e.stopPropagation();
+    await copyTextToClipboard(id); // Use the helper
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000); // Reset icon after 2s
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleEdit = async (webhook) => {
     try {
       await api.delete(`/webhooks/${webhook._id}`);
-      fetchWebhooks()
+      fetchWebhooks();
     } catch (error) {
       alert("Failed to deactivate webhooks");
     }

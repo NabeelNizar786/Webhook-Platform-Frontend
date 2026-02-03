@@ -19,6 +19,9 @@ export default function EventList({ events }) {
           <pre className="payload">
             {JSON.stringify(event.payload, null, 2)}
           </pre>
+          {event.status == "FAILED" && (<pre className="payload">
+            {event.lastError}
+          </pre>)}
         </div>
       ))}
     </div>
